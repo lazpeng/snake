@@ -41,6 +41,21 @@ class Snake {
                 part.y += part.modifier;                
             }
         }
+
+        for(let i = 0; i < this.bodyParts.length; ++i) {
+            if(i >= this.bodyParts.length - 1) {
+                break;
+            }
+
+            let current = this.bodyParts[i];
+            let next = this.bodyParts[i + 1];
+
+            if(current.direction != next.direction) {
+                next.direction = current.direction;
+                next.modifier = current.modifier;
+                break;
+            }
+        }
     }
 
     draw(ctx) {
