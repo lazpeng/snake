@@ -3,6 +3,7 @@ let numSlotsHor = 26, numSlotsVer;
 let snakeStartingX, snakeStartingY;
 var gGame;
 
+
 function getGridWidth() {
     return width / numSlotsHor;
 }
@@ -105,6 +106,7 @@ class Game {
         this.snake = new Snake();
         this.fruit = this.createFruit();
         let count=0;
+        this.eventQueue = [];
     }
     createFruit() {
         let x = Math.round((Math.random() * 1000)) % numSlotsHor;
@@ -119,26 +121,30 @@ class Game {
         switch (code){
             case 37:
                 if(head.direction !== 'horizontal') { //left
-                    head.direction = 'horizontal';
-                    head.modifier = -1;
+                    //head.direction = 'horizontal';
+                    //head.modifier = -1;
+                    this.eventQueue.push("left");
                 }
                 break; 
             case 38:
                 if(head.direction !== 'vertical') { //down
-                    head.direction = 'vertical';
-                    head.modifier = -1;
+                    //head.direction = 'vertical';
+                    //head.modifier = -1;
+                    this.eventQueue.push("down");
                 }
                 break; 
             case 39:
                 if(head.direction !== 'horizontal') { //right
-                    head.direction = 'horizontal';
-                    head.modifier = +1;
+                    //head.direction = 'horizontal';
+                    //head.modifier = +1;
+                    this.eventQueue.push("right");
                 }
                 break; 
             case 40:
                 if(head.direction !== 'vertical') {  //up
-                    head.direction = 'vertical';
-                    head.modifier = +1;
+                    //head.direction = 'vertical';
+                    //head.modifier = +1;
+                    this.eventQueue.push("up");
                 }
                 break; 
             default: break;
@@ -163,6 +169,29 @@ class Game {
     fixedUpdate(){
         this.eat();
         this.snake.move();
+        this.processMovement();
+    }
+    processMovement(){
+        let head = this.snake.bodyParts[0];
+            switch(this.eventQueue[0]){
+                case "left":
+                    head.direction = 'horizontal';
+                    head.modifier = -1;
+                    break;
+                case "right":
+                    head.direction = 'horizontal';
+                    head.modifier = +1;
+                    break;
+                case "up":
+                    head.direction = 'vertical';
+                    this.head.modifier = +1;
+                    break;
+                case "down":
+                    head.direction = 'vertical';
+                    head.modifier = -1;
+                    break;
+            }
+            this.eventQueue = [];
     }
 }
 
