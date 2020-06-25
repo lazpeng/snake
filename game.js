@@ -56,6 +56,7 @@ class Snake {
                 break;
             }
         }
+    
     }
 
     draw(ctx) {
@@ -103,8 +104,8 @@ class Game {
     constructor() {
         this.snake = new Snake();
         this.fruit = this.createFruit();
+        let count=0;
     }
-
     createFruit() {
         let x = Math.round((Math.random() * 1000)) % numSlotsHor;
         let y = Math.round((Math.random() * 1000)) % numSlotsVer;
@@ -115,33 +116,53 @@ class Game {
         let head = this.snake.bodyParts[0];
 
         let code = e.keyCode;
-        switch (code) {
+        switch (code){
             case 37:
-                if(head.direction !== 'horizontal') {
+                if(head.direction !== 'horizontal') { //left
                     head.direction = 'horizontal';
                     head.modifier = -1;
                 }
                 break; 
             case 38:
-                if(head.direction !== 'vertical') {
+                if(head.direction !== 'vertical') { //down
                     head.direction = 'vertical';
                     head.modifier = -1;
                 }
                 break; 
             case 39:
-                if(head.direction !== 'horizontal') {
+                if(head.direction !== 'horizontal') { //right
                     head.direction = 'horizontal';
                     head.modifier = +1;
                 }
                 break; 
             case 40:
-                if(head.direction !== 'vertical') {
+                if(head.direction !== 'vertical') {  //up
                     head.direction = 'vertical';
                     head.modifier = +1;
                 }
                 break; 
             default: break;
         }
+    }
+    eat(){
+        let head = this.snake.bodyParts[0];
+
+        //let fruit = Fruit.x
+        console.log(this.fruit.x);
+        console.log(this.fruit.y);
+        if (head.x==this.fruit.x && head.y==this.fruit.y){
+            this.fruit= this.createFruit();
+            let last = this.snake.bodyParts[this.snake.bodyParts.length - 1];
+            let x = last.direction == 'vertical' ? last.x : last.x - last.modifier;
+            let y = last.direction == 'horizontal' ? last.y : last.y - last.modifier;
+            let newLast = new BodyPart(x, y, last.direction, last.modifier);
+            this.snake.bodyParts.push(newLast);
+            this.count+=1;
+        }
+    }
+    fixedUpdate(){
+        this.eat();
+        this.snake.move();
     }
 }
 
@@ -169,7 +190,7 @@ function gameStart() {
         let game = gGame = new Game();
         window.addEventListener('keydown', game.readKey.bind(game), false);
 
-        setInterval(game.snake.move.bind(game.snake), 500);
+        setInterval(game.fixedUpdate.bind(game), 500);
         setInterval(gameUpdate, 1000.0 / 30, ctx, game);
     }
 }
