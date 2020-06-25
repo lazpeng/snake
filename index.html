@@ -7,6 +7,16 @@
         <link rel="stylesheet" href="index.css">
     </head>
     <body onload="gameStart()">
-        <canvas id="canvas"></canvas>
+        <div style="display: flex; flex-direction: row; justify-content: space-between;">
+            <canvas id="canvas"></canvas>
+            <div style="display: flex; flex-direction: row; justify-content: center; margin: 0 auto;">
+                <div style="display: flex; flex-direction: column; justify-content: center;">
+                    <div>
+                        <button onclick="onStartResume()" class="button" id="startresume">Start</button>
+                        <button onclick="onRestart()" class="button" id="restart">Restart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </body>
 </html>

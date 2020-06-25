@@ -2,7 +2,7 @@ let width, height;
 let numSlotsHor = 26, numSlotsVer;
 let snakeStartingX, snakeStartingY;
 var gGame;
-
+let updateInterval, fixedInterval;
 
 function getGridWidth() {
     return width / numSlotsHor;
@@ -16,6 +16,8 @@ class BodyPart {
     constructor(x, y, direction, modifier) {
         this.x = x;
         this.y = y;
+        this.prevX = x;
+        this.prevY = y;
         this.direction = direction;
         this.modifier = modifier;
     }
@@ -23,41 +25,39 @@ class BodyPart {
 
 class Snake {
     constructor() {
+        let head = new BodyPart(snakeStartingX, snakeStartingY, 'vertical', -1);
+        let middle = new BodyPart(snakeStartingX, snakeStartingY + 1, 'vertical', -1);
+        let tail = new BodyPart(snakeStartingX, snakeStartingY + 2, 'vertical', -1);
         this.bodyParts = [
-            new BodyPart(snakeStartingX, snakeStartingY, 'vertical', -1),
-            new BodyPart(snakeStartingX, snakeStartingY + 1, 'vertical', -1),
-            new BodyPart(snakeStartingX, snakeStartingY + 2, 'vertical', -1),
+            head,
+            middle,
+            tail,
         ];
         this.r = (Math.random() * 1000) % 256;
         this.g = (Math.random() * 1000) % 256;
-        this.b = (Math.random() * 1000) % 256; 
+        this.b = (Math.random() * 1000) % 256;
     }
 
     move() {
-        for(let i = 0; i < this.bodyParts.length; ++i) {
+        this.bodyParts.forEach(p => {
+            p.prevX = p.x;
+            p.prevY = p.y;
+        });
+
+        let head = this.bodyParts[0];
+        if (head.direction == 'horizontal') {
+            head.x += head.modifier;
+        } else {
+            head.y += head.modifier;
+        }
+
+        for (let i = 1; i < this.bodyParts.length; ++i) {
             let part = this.bodyParts[i];
-            if (part.direction=='horizontal') {
-                part.x += part.modifier;
-            } else {
-                part.y += part.modifier;                
-            }
+            let prev = this.bodyParts[i - 1];
+
+            part.x = prev.prevX;
+            part.y = prev.prevY;
         }
-
-        for(let i = 0; i < this.bodyParts.length; ++i) {
-            if(i >= this.bodyParts.length - 1) {
-                break;
-            }
-
-            let current = this.bodyParts[i];
-            let next = this.bodyParts[i + 1];
-
-            if(current.direction != next.direction) {
-                next.direction = current.direction;
-                next.modifier = current.modifier;
-                break;
-            }
-        }
-    
     }
 
     draw(ctx) {
@@ -80,7 +80,7 @@ class Snake {
 
         ctx.fillStyle = `rgb(${this.r}, ${this.g}, ${this.b})`;
 
-        for(let i = 1; i < this.bodyParts.length; ++i) {
+        for (let i = 1; i < this.bodyParts.length; ++i) {
             let part = this.bodyParts[i];
 
             ctx.fillRect(Math.floor(getGridWidth() * part.x), getGridHeight() * part.y, getGridWidth(), getGridHeight());
@@ -105,9 +105,9 @@ class Game {
     constructor() {
         this.snake = new Snake();
         this.fruit = this.createFruit();
-        let count=0;
-        this.eventQueue = [];
+        this.state = 'paused';
     }
+
     createFruit() {
         let x = Math.round((Math.random() * 1000)) % numSlotsHor;
         let y = Math.round((Math.random() * 1000)) % numSlotsVer;
@@ -117,84 +117,57 @@ class Game {
     readKey(e) {
         let head = this.snake.bodyParts[0];
 
-        let code = e.keyCode;
-        switch (code){
+        switch (e.keyCode) {
             case 37:
-                if(head.direction !== 'horizontal') { //left
-                    //head.direction = 'horizontal';
-                    //head.modifier = -1;
-                    this.eventQueue.push("left");
+                if(head.direction != 'horizontal') {
+                    head.direction = 'horizontal';
+                    head.modifier = -1;
                 }
-                break; 
+                break;
             case 38:
-                if(head.direction !== 'vertical') { //down
-                    //head.direction = 'vertical';
-                    //head.modifier = -1;
-                    this.eventQueue.push("down");
+                if(head.direction != 'vertical') {
+                    head.direction = 'vertical';
+                    head.modifier = -1;
                 }
-                break; 
+                break;
             case 39:
-                if(head.direction !== 'horizontal') { //right
-                    //head.direction = 'horizontal';
-                    //head.modifier = +1;
-                    this.eventQueue.push("right");
+                if(head.direction != 'horizontal') {
+                    head.direction = 'horizontal';
+                    head.modifier = +1;
                 }
-                break; 
+                break;
             case 40:
-                if(head.direction !== 'vertical') {  //up
-                    //head.direction = 'vertical';
-                    //head.modifier = +1;
-                    this.eventQueue.push("up");
+                if(head.direction != 'vertical') {
+                    head.direction = 'vertical';
+                    head.modifier = 1;
                 }
-                break; 
+                break;
             default: break;
         }
     }
-    eat(){
+
+    eat() {
         let head = this.snake.bodyParts[0];
 
-        //let fruit = Fruit.x
-        console.log(this.fruit.x);
-        console.log(this.fruit.y);
-        if (head.x==this.fruit.x && head.y==this.fruit.y){
-            this.fruit= this.createFruit();
+        if (head.x == this.fruit.x && head.y == this.fruit.y) {
+            this.fruit = this.createFruit();
             let last = this.snake.bodyParts[this.snake.bodyParts.length - 1];
             let x = last.direction == 'vertical' ? last.x : last.x - last.modifier;
             let y = last.direction == 'horizontal' ? last.y : last.y - last.modifier;
             let newLast = new BodyPart(x, y, last.direction, last.modifier);
             this.snake.bodyParts.push(newLast);
-            this.count+=1;
         }
     }
-    fixedUpdate(){
-        this.eat();
+
+    fixedUpdate() {
+        if(this.state != 'running') {
+            return;
+        }
+
         this.snake.move();
-        this.processMovement();
-    }
-    processMovement(){
-        let head = this.snake.bodyParts[0];
-            switch(this.eventQueue[0]){
-                case "left":
-                    head.direction = 'horizontal';
-                    head.modifier = -1;
-                    break;
-                case "right":
-                    head.direction = 'horizontal';
-                    head.modifier = +1;
-                    break;
-                case "up":
-                    head.direction = 'vertical';
-                    this.head.modifier = +1;
-                    break;
-                case "down":
-                    head.direction = 'vertical';
-                    head.modifier = -1;
-                    break;
-            }
-            this.eventQueue = [];
+        this.eat();
     }
 }
-
 
 function gameUpdate(ctx, game) {
     ctx.fillStyle = 'rgb(41, 41, 41)';
@@ -202,6 +175,36 @@ function gameUpdate(ctx, game) {
 
     game.fruit.draw(ctx);
     game.snake.draw(ctx);
+
+    if(gGame.state != 'running') {
+        ctx.fillStyle = 'rgba(99, 99, 99, 0.5)';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = 'rgb(200, 200, 200)';
+        ctx.font = '32px "Comic Sans"';
+        ctx.fillText('Paused', width / 2, height / 2);
+    }
+}
+
+function onStartResume() {
+    let button = document.getElementById('startresume');
+
+    if(gGame !== undefined) {
+        if(gGame.state == 'running') {
+            gGame.state = 'paused';
+            button.innerText = 'Start';
+        } else {
+            gGame.state = 'running';
+            button.innerText = 'Pause';
+        }
+    }
+}
+
+function onRestart() {
+    let button = document.getElementById('startresume');
+    button.innerText = "Start";
+
+    gameStart();
 }
 
 function gameStart() {
@@ -219,7 +222,15 @@ function gameStart() {
         let game = gGame = new Game();
         window.addEventListener('keydown', game.readKey.bind(game), false);
 
-        setInterval(game.fixedUpdate.bind(game), 500);
-        setInterval(gameUpdate, 1000.0 / 30, ctx, game);
+        if(fixedInterval) {
+            clearInterval(fixedInterval);
+        }
+
+        if(updateInterval) {
+            clearInterval(updateInterval);
+        }
+
+        fixedInterval = setInterval(game.fixedUpdate.bind(game), 300);
+        updateInterval = setInterval(gameUpdate, 1000.0 / 30, ctx, game);
     }
 }

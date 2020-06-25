@@ -6,6 +6,12 @@ body {
     padding: 0;
 }
 
+.button {
+    height: 25px;
+    width: 75px;
+    border-radius: 3px;
+}
+
 #canvas {
     border: 1px solid white;
 }
