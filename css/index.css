@@ -32,7 +32,7 @@ section#game {
 
 #canvas {
     border: 30px solid;
-    border-image: url(../_imagens/wall_bg.png) 56 round;
+    border-image: url(../imagens/wall_bg.png) 56 round;
     background-color: gray;
 }
 
@@ -47,17 +47,15 @@ aside#lateral {
     margin: 0;   
     /* border: 30px solid; */
     border: 30px solid;
-    border-image: url(../_imagens/wall_bg.png) 56 round;
+    border-image: url(../imagens/wall_bg.png) 56 round;
 }
 
 footer#rodape {
     clear: both;
-    padding-top: 10px;
 }
 
 footer#rodape p {
     font-family: sans-serif;
-    font-size: 20pt;
+    font-size: 12pt;
     text-align: center;
 }
-

@@ -3,8 +3,7 @@ let numSlotsHor = 26, numSlotsVer;
 let snakeStartingX, snakeStartingY;
 var gGame;
 let updateInterval;
-let audio = new Audio('_audio/zelda_ost.mp3');
-
+let audio = new Audio('audio/zelda_ost.mp3');
 
 function getGridWidth() {
     return width / numSlotsHor;
