@@ -3,22 +3,34 @@
     <head>
         <meta charset="utf-8">
         <title>Snake</title>
-        <script src="game.js"></script>
-        <link rel="stylesheet" href="index.css">
+        <script src="_javascript/game.js"></script>
+        <link rel="stylesheet" href="_css/index.css">
     </head>
     <body onload="gameStart()">
-        <img hidden id="bg" width="300" height="227" src="bg.png">
-        <div style="display: flex; flex-direction: row; justify-content: space-between;">
-            <canvas id="canvas"></canvas>
-            <div style="display: flex; flex-direction: row; justify-content: center; margin: 0 auto;">
-                <div style="display: flex; flex-direction: column; justify-content: center;">
-                    <div>
-                        <h1 id="fruit">Comeu 0 frutinhas</h1>
-                        <button onclick="onStartResume()" class="button" id="startresume">Start</button>
-                        <button onclick="onRestart()" class="button" id="restart">Restart</button>
+        <img hidden id="bg" width="300" height="227" src="_imagens/grass_bg.jpg">
+        <header id="cabecalho">
+            <h1>ULTIMATE NAJA ADVENTURES</h1>
+        </header>
+        <div id="interface">           
+            <section id="game">
+                <div id="center" style="display: flex; flex-direction: row; justify-content: space-between;">
+                    <canvas id="canvas"></canvas>
+                    <div style="display: flex; flex-direction: row; justify-content: center; margin: 0 auto;">
+                        <div style="display: flex; flex-direction: column; justify-content: center;">                        
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
+            <aside id="lateral">                                
+                <h1 id="fruit_eated">Comeu 0 frutinhas</h1>
+                <h1 id="fruit">Faltam 30 frutinhas</h1>
+                <button onclick="onStartResume()" class="button" id="startresume">Start</button>
+                <button onclick="onRestart()" class="button" id="restart">Restart</button>              
+            </aside>
+            <footer id="rodape">
+                <p>Copyright &copy; 2020 - by lazpeng, ytalobyank and MrFirel <br>
+                <a href="https://github.com/lazpeng/snake.git" target="blank">Source</a> </p>
+            </footer>
         </div>
     </body>
 </html>
