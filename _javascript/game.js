@@ -3,6 +3,8 @@ let numSlotsHor = 26, numSlotsVer;
 let snakeStartingX, snakeStartingY;
 var gGame;
 let updateInterval;
+let audio = new Audio('_audio/zelda_ost.mp3');
+
 
 function getGridWidth() {
     return width / numSlotsHor;
@@ -114,10 +116,11 @@ class Game {
         this.snake = new Snake();
         this.fruit = this.createFruit();
         this.state = 'paused';
-        this.count = 0;
+        this.eated_fruits = 0;
+        this.missing_fruits = 30;
         this.elapsed = 0;
-        this.targetTime = 500;
-        this.minTarget = 75;
+        this.targetTime = 350;
+        this.minTarget = 50;
     }
 
     createFruit() {
@@ -170,12 +173,16 @@ class Game {
             let newLast = new BodyPart(last.prevX, last.prevY, last.direction, last.modifier);
             this.snake.bodyParts.push(newLast);
             
-            document.querySelector('h1#fruit').innerText = `Comeu ${this.count += 1} frutinha${this.count > 1 ? 's' : ''}`;
+            document.querySelector('h1#fruit_eated').innerText = `Comeu ${this.eated_fruits += 1} frutinha${this.eated_fruits > 1 ? 's' : ''}`;
+            document.querySelector('h1#fruit').innerText = `Falta${this.missing_fruits - this.eated_fruits > 1 ? 'm' : ''} ${this.missing_fruits - this.eated_fruits} frutinha${this.missing_fruits - this.eated_fruits > 1 ? 's' : ''}`;
 
-            if(this.targetTime > this.minTarget && (this.count % 2) == 0) {
-                this.targetTime -= 25;
+            if(this.targetTime > this.minTarget /*&& (this.eated_fruits % 2) == 0*/) {
+                this.targetTime -= 12.5;
             }
-        }
+
+            if(this.eated_fruits == 30)
+                alert('win');
+        }       
     }
 }
 
@@ -224,19 +231,21 @@ function die() {
 
     gGame.state = 'dead';
     button.innerText = 'Start';
-    button.style = "display: none;";
+    button.style = "display: none;";  
 }
 
 function onStartResume() {
     let button = document.getElementById('startresume');
-
+    
     if (gGame !== undefined) {
         if (gGame.state == 'running') {
             gGame.state = 'paused';
-            button.innerText = 'Resume';
+            button.innerText = 'Resume'; 
+            audio.pause();
         } else {
             gGame.state = 'running';
-            button.innerText = 'Pause';
+            button.innerText = 'Pause';        
+            audio.play(); 
         }
     }
 }
@@ -245,6 +254,8 @@ function onRestart() {
     let button = document.getElementById('startresume');
     button.innerText = "Start";
     button.style = "";
+    document.querySelector('h1#fruit').innerText = 'Faltam 30 frutinhas';
+    document.querySelector('h1#fruit_eated').innerText = 'Comeu 0 frutinhas';  
 
     gameStart();
 }
@@ -255,6 +266,7 @@ function gameStart() {
     width = canvas.width = window.innerWidth / 1.5;
     height = canvas.height = window.innerHeight / 1.5;
     numSlotsVer = Math.round(numSlotsHor * (height / width));
+    document.getElementById('lateral').style.height = canvas.height + "px";
     snakeStartingX = Math.round(numSlotsHor / 2);
     snakeStartingY = Math.round(numSlotsVer / 2);
 
