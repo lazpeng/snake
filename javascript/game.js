@@ -13,6 +13,18 @@ function getGridHeight() {
     return height / numSlotsVer;
 }
 
+function fillSquareInsideCell(ctx, offsetX, offsetY, x, y, offsetWidth, offsetHeight, center) {
+    let posX = getGridWidth() * x + (getGridWidth() * (offsetX));
+    let posY = getGridHeight() * y + (getGridHeight() * (offsetY));
+
+    if(center) {
+        posX -= getGridWidth() * offsetWidth / 2;
+        posY -= getGridHeight() * offsetHeight / 2;
+    }
+
+    ctx.fillRect(posX, posY, getGridWidth() * offsetWidth, getGridHeight() * offsetHeight);
+}
+
 class BodyPart {
     constructor(x, y, direction, modifier) {
         this.x = x;
@@ -69,31 +81,39 @@ class Snake {
         this.moved = true;
     }
 
-    draw(ctx) {
-        ctx.fillStyle = `rgb(${this.r}, ${this.g}, ${this.b})`;
-
-        let part = this.bodyParts[0];
-
-        ctx.fillRect(getGridWidth() * part.x, getGridHeight() * part.y, getGridWidth(), getGridHeight());
-
-        const middle = Math.round(getGridHeight() / 2);
-        const ytenth = Math.round(getGridHeight() / 5);
-        const xtenth = getGridWidth() / 5;
+    drawEyes(ctx) {
+        let head = this.bodyParts[0];
 
         let eyeR = this.r / 2, eyeG = this.g / 2, eyeB = this.b / 2;
 
+        let size = 0.20;
+        let positionTable =
+        [
+            [0.05, 0.05, 0.05, 0.75],
+            [0.75, 0.05, 0.75, 0.75],
+            [0.05, 0.05, 0.75, 0.05],
+            [0.05, 0.75, 0.75, 0.75]
+        ];
+
+        let index = (head.modifier > 0 ? 1 : 0) + (head.direction == 'horizontal' ? 0 : 2);
+
+        let arr = positionTable[index];
+
         ctx.fillStyle = `rgb(${eyeR}, ${eyeG}, ${eyeB})`;
+        fillSquareInsideCell(ctx, arr[0], arr[1], head.x, head.y, size, size, false);
+        fillSquareInsideCell(ctx, arr[2], arr[3], head.x, head.y, size, size, false);
+    }
 
-        ctx.fillRect(getGridWidth() * part.x + xtenth, getGridHeight() * part.y + middle - ytenth * 2, xtenth, ytenth);
-        ctx.fillRect(getGridWidth() * part.x + xtenth, getGridHeight() * part.y + middle + ytenth, xtenth, ytenth);
-
+    draw(ctx) {
         ctx.fillStyle = `rgb(${this.r}, ${this.g}, ${this.b})`;
 
-        for (let i = 1; i < this.bodyParts.length; ++i) {
+        for (let i = 0; i < this.bodyParts.length; ++i) {
             let part = this.bodyParts[i];
 
             ctx.fillRect(Math.floor(getGridWidth() * part.x), getGridHeight() * part.y, getGridWidth(), getGridHeight());
         }
+
+        this.drawEyes(ctx);
     }
 }
 
