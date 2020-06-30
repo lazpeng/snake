@@ -31,8 +31,6 @@ section#game {
 }
 
 #canvas {
-    border: 30px solid;
-    border-image: url(../imagens/wall_bg.png) 56 round;
     background-color: gray;
 }
 
@@ -46,12 +44,15 @@ aside#lateral {
     /* float: right; */  
     margin: 0;   
     /* border: 30px solid; */
-    border: 30px solid;
-    border-image: url(../imagens/wall_bg.png) 56 round;
 }
 
 footer#rodape {
     clear: both;
+}
+
+#level_text {
+    margin-top: 0;
+    padding-top: 10px;
 }
 
 footer#rodape p {

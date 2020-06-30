@@ -4,6 +4,40 @@ let snakeStartingX, snakeStartingY;
 var gGame;
 let updateInterval;
 let audio = new Audio('audio/zelda_ost.mp3');
+let deathSfx = new Audio('audio/death.mp3');
+var levels = [
+    {
+        "walls": [
+            {
+                "x": "10",
+                "y": "5"
+            },
+            {
+                "type": "pillar",
+                "startX": "0",
+                "startY": "4",
+                "direction": "horizontal",
+                "length": "5"
+            },
+            {
+                "x": "20",
+                "y": "10"
+            }
+        ]
+    },
+    {
+        "walls": [
+            {
+                "x": "5",
+                "y": "5"
+            },
+            {
+                "x": "3",
+                "y": "3"
+            }
+        ]
+    }
+]
 
 function getGridWidth() {
     return width / numSlotsHor;
@@ -13,14 +47,9 @@ function getGridHeight() {
     return height / numSlotsVer;
 }
 
-function fillSquareInsideCell(ctx, offsetX, offsetY, x, y, offsetWidth, offsetHeight, center) {
+function fillSquareInsideCell(ctx, offsetX, offsetY, x, y, offsetWidth, offsetHeight) {
     let posX = getGridWidth() * x + (getGridWidth() * (offsetX));
     let posY = getGridHeight() * y + (getGridHeight() * (offsetY));
-
-    if(center) {
-        posX -= getGridWidth() * offsetWidth / 2;
-        posY -= getGridHeight() * offsetHeight / 2;
-    }
 
     ctx.fillRect(posX, posY, getGridWidth() * offsetWidth, getGridHeight() * offsetHeight);
 }
@@ -52,21 +81,37 @@ class Snake {
         this.b = (Math.random() * 1000) % 256;
     }
 
-    move() {
+    move(currentLevel) {
         this.bodyParts.forEach(p => {
             p.prevX = p.x;
             p.prevY = p.y;
         });
 
         let head = this.bodyParts[0];
+        let modifX = 0, modifY = 0;
         if (head.direction == 'horizontal') {
-            head.x += head.modifier;
+            modifX = head.modifier;
         } else {
-            head.y += head.modifier;
+            modifY = head.modifier;
         }
-        if ((head.x == numSlotsHor || head.x < 0) || head.y == numSlotsVer || head.y < 0) {
+
+        if (head.x + modifX == numSlotsHor - 1 || head.x + modifX <= 0 || head.y + modifY == numSlotsVer - 1 || head.y + modifY <= 0) {
             die();
+            return;
         }
+
+        for(let w = 0; w < levels[currentLevel].walls.length; ++w) {
+            let wall = levels[currentLevel].walls[w];
+
+            if(head.x + modifX == wall.x && head.y + modifY == wall.y) {
+                die();
+                return;
+            }
+        }
+
+        head.x += modifX;
+        head.y += modifY;
+
         for (let i = 1; i < this.bodyParts.length; ++i) {
             let part = this.bodyParts[i];
             let prev = this.bodyParts[i - 1];
@@ -100,8 +145,8 @@ class Snake {
         let arr = positionTable[index];
 
         ctx.fillStyle = `rgb(${eyeR}, ${eyeG}, ${eyeB})`;
-        fillSquareInsideCell(ctx, arr[0], arr[1], head.x, head.y, size, size, false);
-        fillSquareInsideCell(ctx, arr[2], arr[3], head.x, head.y, size, size, false);
+        fillSquareInsideCell(ctx, arr[0], arr[1], head.x, head.y, size, size);
+        fillSquareInsideCell(ctx, arr[2], arr[3], head.x, head.y, size, size);
     }
 
     draw(ctx) {
@@ -124,27 +169,44 @@ class Fruit {
     }
 
     draw(ctx) {
-        ctx.fillStyle = 'rgb(255, 0, 50)';
-
-        ctx.fillRect(this.x * getGridWidth(), this.y * getGridHeight(), getGridWidth(), getGridHeight());
+        ctx.drawImage(document.getElementById("fruit"), this.x * getGridWidth(), this.y * getGridHeight(), getGridWidth(), getGridHeight());
     }
 }
 
 class Game {
     constructor() {
         this.snake = new Snake();
+        this.currentLevel = 0;
         this.fruit = this.createFruit();
         this.state = 'paused';
         this.eated_fruits = 0;
-        this.missing_fruits = 30;
+        this.missing_fruits = 1;
         this.elapsed = 0;
         this.targetTime = 350;
         this.minTarget = 50;
     }
 
     createFruit() {
-        let x = Math.round((Math.random() * 1000)) % numSlotsHor;
-        let y = Math.round((Math.random() * 1000)) % numSlotsVer;
+        let x, y;
+        let found = false;
+        while(!found) {
+            x = Math.round((Math.random() * 1000)) % (numSlotsHor - 1);
+            y = Math.round((Math.random() * 1000)) % (numSlotsVer - 1);
+
+            x = x == 0 ? 1 : x;
+            y = y == 0 ? 1 : y;
+
+            found = true;
+
+            for(let w = 0; w < levels[this.currentLevel].walls.length; ++w) {
+                let wall = levels[this.currentLevel].walls[w];
+
+                if(wall.x == x && wall.y == y) {
+                    found = false;
+                    break;
+                }
+            }
+        }
         return new Fruit(x, y);
     }
 
@@ -184,6 +246,18 @@ class Game {
         }
     }
 
+    reset() {
+        this.eated_fruits = 0;
+        this.fruit = this.createFruit();
+        this.state = 'paused';
+        this.elapsed = 0;
+        this.targetTime = 350;
+        this.snake = new Snake();
+        document.querySelector('h1#level_text').innerText = `Nível ${this.currentLevel + 1}`;
+        document.querySelector('h1#fruit_eated').innerText = `Comeu ${this.eated_fruits += 1} frutinha${this.eated_fruits > 1 ? 's' : ''}`;
+        document.querySelector('h1#fruit').innerText = `Falta${this.missing_fruits - this.eated_fruits > 1 ? 'm' : ''} ${this.missing_fruits - this.eated_fruits} frutinha${this.missing_fruits - this.eated_fruits > 1 ? 's' : ''}`;
+    }
+
     eat() {
         let head = this.snake.bodyParts[0];
         if (head.x == this.fruit.x && head.y == this.fruit.y) {
@@ -195,12 +269,20 @@ class Game {
             document.querySelector('h1#fruit_eated').innerText = `Comeu ${this.eated_fruits += 1} frutinha${this.eated_fruits > 1 ? 's' : ''}`;
             document.querySelector('h1#fruit').innerText = `Falta${this.missing_fruits - this.eated_fruits > 1 ? 'm' : ''} ${this.missing_fruits - this.eated_fruits} frutinha${this.missing_fruits - this.eated_fruits > 1 ? 's' : ''}`;
 
-            if(this.targetTime > this.minTarget /*&& (this.eated_fruits % 2) == 0*/) {
+            if(this.targetTime > this.minTarget) {
                 this.targetTime -= 12.5;
             }
 
-            if(this.eated_fruits == 30)
-                alert('win');
+            if(this.missing_fruits - this.eated_fruits <= 0) {
+                if(levels.length - 1 <= this.currentLevel) {
+                    alert("Cleared");
+                    this.currentLevel = 0;
+                    this.reset();
+                } else {
+                    this.currentLevel += 1;
+                    this.reset();
+                }
+            }
         }       
     }
 }
@@ -209,10 +291,19 @@ function gameUpdate(ctx, game, deltaTime) {
     ctx.fillStyle = 'rgb(41, 41, 41)';
     ctx.fillRect(0, 0, width, height);
 
+    ctx.drawImage(document.getElementById('bg'), 0, 0, width, height);
+
     for(let row = 0; row < numSlotsVer; ++row) {
         for(let col = 0; col < numSlotsHor; ++col) {
-            ctx.drawImage(document.getElementById('bg'), getGridWidth() * col, getGridHeight() * row, getGridWidth(), getGridHeight());
+            if(col == 0 || col == numSlotsHor - 1 || row == 0 || row == numSlotsVer - 1) {
+                ctx.drawImage(document.getElementById('wall'), getGridWidth() * col, getGridHeight() * row, getGridWidth(), getGridHeight());
+            }
         }
+    }
+
+    for(let w = 0; w < levels[gGame.currentLevel].walls.length; ++w) {
+        let wall = levels[gGame.currentLevel].walls[w];
+        ctx.drawImage(document.getElementById("wall"), getGridWidth() * wall.x, getGridHeight() * wall.y, getGridWidth(), getGridHeight());
     }
 
     game.elapsed += deltaTime;
@@ -221,7 +312,7 @@ function gameUpdate(ctx, game, deltaTime) {
         game.elapsed = 0;
 
         if(game.state == 'running') {
-            game.snake.move();
+            game.snake.move(game.currentLevel);
             game.eat();
         }
     }
@@ -250,16 +341,20 @@ function die() {
 
     gGame.state = 'dead';
     button.innerText = 'Start';
-    button.style = "display: none;";  
+    button.style = "display: none;";
+    audio.currentTime = 0;
+    audio.pause();
 }
 
 function onStartResume() {
     let button = document.getElementById('startresume');
+
+    audio.loop = true;
     
     if (gGame !== undefined) {
         if (gGame.state == 'running') {
             gGame.state = 'paused';
-            button.innerText = 'Resume'; 
+            button.innerText = 'Resume';
             audio.pause();
         } else {
             gGame.state = 'running';

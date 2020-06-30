@@ -8,6 +8,8 @@
     </head>
     <body onload="gameStart()">
         <img hidden id="bg" width="300" height="227" src="imagens/grass_bg.jpg">
+        <img hidden id="fruit" width="300" height="227" src="imagens/fruit.png">
+        <img hidden id="wall" width="300" height="227" src="imagens/wall_bg.png">
         <header id="cabecalho">
             <h1>ULTIMATE NAJA ADVENTURES</h1>
         </header>
@@ -21,7 +23,8 @@
                     </div>
                 </div>
             </section>
-            <aside id="lateral">                                
+            <aside id="lateral">
+                <h1 id="level_text">Nível 1</h1>
                 <h1 id="fruit_eated">Comeu 0 frutinhas</h1>
                 <h1 id="fruit">Faltam 30 frutinhas</h1>
                 <button onclick="onStartResume()" class="button" id="startresume">Start</button>
