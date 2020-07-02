@@ -9,19 +9,19 @@ var levels = [
     {
         "walls": [
             {
-                "x": "00",
-                "y": "0"
+                "x": "2",
+                "y": "-4"
             },
             {
                 "type": "pillar",
-                "startX": "0",
-                "startY": "4",
+                "x": "10",
+                "y": "2",
                 "direction": "horizontal",
                 "length": "5"
             },
             {
-                "x": "0",
-                "y": "0"
+                "x": "5",
+                "y": "10"
             }
         ]
     },
@@ -81,7 +81,7 @@ class Snake {
         this.b = (Math.random() * 1000) % 256;
     }
 
-    move(currentLevel) {
+    move(grid) {
         this.bodyParts.forEach(p => {
             p.prevX = p.x;
             p.prevY = p.y;
@@ -95,18 +95,10 @@ class Snake {
             modifY = head.modifier;
         }
 
-        if (head.x + modifX == numSlotsHor - 1 || head.x + modifX <= 0 || head.y + modifY == numSlotsVer - 1 || head.y + modifY <= 0) {
+        let slot = grid[(head.y + modifY) * numSlotsHor + head.x + modifX];
+        if(slot && slot !== 'fruit') {
             die();
             return;
-        }
-
-        for(let w = 0; w < levels[currentLevel].walls.length; ++w) {
-            let wall = levels[currentLevel].walls[w];
-
-            if(head.x + modifX == wall.x && head.y + modifY == wall.y) {
-                die();
-                return;
-            }
         }
 
         head.x += modifX;
@@ -177,6 +169,7 @@ class Game {
     constructor() {
         this.snake = new Snake();
         this.currentLevel = 0;
+        this.grid = [];
         this.fruit = this.createFruit();
         this.state = 'paused';
         this.eated_fruits = 0;
@@ -184,6 +177,34 @@ class Game {
         this.elapsed = 0;
         this.targetTime = 425;
         this.minTarget = 75;
+    }
+
+    initGrid() {
+        for(let row = 0; row < numSlotsVer; ++row) {
+            for(let col = 0; col < numSlotsHor; ++col) {
+                if(col == 0 || col == numSlotsHor - 1 || row == 0 || row == numSlotsVer - 1) {
+                    this.grid[row * numSlotsHor + col] = 'wall';
+                }
+            }
+        }
+
+        for(let w = 0; w < levels[gGame.currentLevel].walls.length; ++w) {
+            let wall = levels[gGame.currentLevel].walls[w];
+            if(wall.type == 'pillar') {
+                let curX = Number.parseInt(wall.x), curY = Number.parseInt(wall.y);
+                for(let i = 0; i < wall.length; ++i) {
+                    this.grid[curY * numSlotsHor + curX] = 'wall';
+
+                    if(wall.direction == 'horizontal') {
+                        curX += 1;
+                    } else {
+                        curY += 1;
+                    }
+                }
+            } else {
+                this.grid[wall.y * numSlotsHor + Number.parseInt(wall.x)] = 'wall';
+            }
+        }
     }
 
     createFruit() {
@@ -196,17 +217,14 @@ class Game {
             x = x == 0 ? 1 : x;
             y = y == 0 ? 1 : y;
 
-            found = true;
-
-            for(let w = 0; w < levels[this.currentLevel].walls.length; ++w) {
-                let wall = levels[this.currentLevel].walls[w];
-
-                if(wall.x == x && wall.y == y) {
-                    found = false;
-                    break;
-                }
-            }
+            found = this.grid[y * numSlotsHor + x] != 'wall';
         }
+
+        if(this.fruit) {
+            this.grid[this.fruit.y * numSlotsHor + this.fruit.x] = undefined;
+        }
+    
+        this.grid[y * numSlotsHor + x] = 'fruit';
         return new Fruit(x, y);
     }
 
@@ -254,6 +272,7 @@ class Game {
         this.elapsed = 0;
         this.targetTime = 350;
         this.snake = new Snake();
+        this.initGrid();
         document.querySelector('h1#level_text').innerText = `Nível ${this.currentLevel + 1}`;
         document.querySelector('h1#fruit_eated').innerText = `Comeu ${this.eated_fruits} frutinha${this.eated_fruits > 1 ? 's' : ''}`;
         document.querySelector('h1#fruit').innerText = `Falta${this.missing_fruits - this.eated_fruits > 1 ? 'm' : ''} ${this.missing_fruits - this.eated_fruits} frutinha${this.missing_fruits - this.eated_fruits > 1 ? 's' : ''}`;
@@ -298,15 +317,10 @@ function gameUpdate(ctx, game, deltaTime) {
 
     for(let row = 0; row < numSlotsVer; ++row) {
         for(let col = 0; col < numSlotsHor; ++col) {
-            if(col == 0 || col == numSlotsHor - 1 || row == 0 || row == numSlotsVer - 1) {
-                ctx.drawImage(document.getElementById('wall'), 0, 0, getGridWidth(), getGridHeight(), getGridWidth() * col, getGridHeight() * row, getGridWidth(), getGridHeight());
+            if(game.grid[row * numSlotsHor + col]) {
+                ctx.drawImage(document.getElementById(game.grid[row * numSlotsHor + col]), 0, 0, getGridWidth(), getGridHeight(), getGridWidth() * col, getGridHeight() * row, getGridWidth(), getGridHeight());
             }
         }
-    }
-
-    for(let w = 0; w < levels[gGame.currentLevel].walls.length; ++w) {
-        let wall = levels[gGame.currentLevel].walls[w];
-        ctx.drawImage(document.getElementById('wall'), 0, 0, getGridWidth(), getGridHeight(), getGridWidth() * wall.x, getGridHeight() * wall.y, getGridWidth(), getGridHeight());
     }
 
     game.elapsed += deltaTime;
@@ -315,7 +329,7 @@ function gameUpdate(ctx, game, deltaTime) {
         game.elapsed = 0;
 
         if(game.state == 'running') {
-            game.snake.move(game.currentLevel);
+            game.snake.move(game.grid);
             game.eat();
         }
     }
@@ -391,6 +405,7 @@ function gameStart() {
         let ctx = canvas.getContext('2d');
 
         let game = gGame = new Game();
+        game.initGrid();
         window.addEventListener('keydown', game.readKey.bind(game), false);
 
         if (updateInterval) {
