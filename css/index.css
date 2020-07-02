@@ -35,15 +35,12 @@ section#game {
 }
 
 aside#lateral {
+    box-sizing: border-box;
     background-color: gray; 
     color: white;
     text-align: center;
-    /* width: 307px; */
-    /* height: 634px; */
-    padding: 0;
-    /* float: right; */  
-    margin: 0;   
-    /* border: 30px solid; */
+    border: 34px solid;
+    border-image: url(../imagens/wall_bg.png) 56 round; 
 }
 
 footer#rodape {

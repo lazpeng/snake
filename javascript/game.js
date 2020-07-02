@@ -9,8 +9,8 @@ var levels = [
     {
         "walls": [
             {
-                "x": "10",
-                "y": "5"
+                "x": "00",
+                "y": "0"
             },
             {
                 "type": "pillar",
@@ -20,8 +20,8 @@ var levels = [
                 "length": "5"
             },
             {
-                "x": "20",
-                "y": "10"
+                "x": "0",
+                "y": "0"
             }
         ]
     },
@@ -180,10 +180,10 @@ class Game {
         this.fruit = this.createFruit();
         this.state = 'paused';
         this.eated_fruits = 0;
-        this.missing_fruits = 1;
+        this.missing_fruits = 30;
         this.elapsed = 0;
-        this.targetTime = 350;
-        this.minTarget = 50;
+        this.targetTime = 425;
+        this.minTarget = 75;
     }
 
     createFruit() {
@@ -248,13 +248,14 @@ class Game {
 
     reset() {
         this.eated_fruits = 0;
+        this.missing_fruits = 30;
         this.fruit = this.createFruit();
         this.state = 'paused';
         this.elapsed = 0;
         this.targetTime = 350;
         this.snake = new Snake();
         document.querySelector('h1#level_text').innerText = `Nível ${this.currentLevel + 1}`;
-        document.querySelector('h1#fruit_eated').innerText = `Comeu ${this.eated_fruits += 1} frutinha${this.eated_fruits > 1 ? 's' : ''}`;
+        document.querySelector('h1#fruit_eated').innerText = `Comeu ${this.eated_fruits} frutinha${this.eated_fruits > 1 ? 's' : ''}`;
         document.querySelector('h1#fruit').innerText = `Falta${this.missing_fruits - this.eated_fruits > 1 ? 'm' : ''} ${this.missing_fruits - this.eated_fruits} frutinha${this.missing_fruits - this.eated_fruits > 1 ? 's' : ''}`;
     }
 
@@ -292,18 +293,20 @@ function gameUpdate(ctx, game, deltaTime) {
     ctx.fillRect(0, 0, width, height);
 
     ctx.drawImage(document.getElementById('bg'), 0, 0, width, height);
+    ctx.fillStyle = 'rgba(41, 41, 41, 0.5)';
+    ctx.fillRect(getGridWidth(), getGridHeight(), width - getGridWidth() * 2, height - getGridHeight() * 2);
 
     for(let row = 0; row < numSlotsVer; ++row) {
         for(let col = 0; col < numSlotsHor; ++col) {
             if(col == 0 || col == numSlotsHor - 1 || row == 0 || row == numSlotsVer - 1) {
-                ctx.drawImage(document.getElementById('wall'), getGridWidth() * col, getGridHeight() * row, getGridWidth(), getGridHeight());
+                ctx.drawImage(document.getElementById('wall'), 0, 0, getGridWidth(), getGridHeight(), getGridWidth() * col, getGridHeight() * row, getGridWidth(), getGridHeight());
             }
         }
     }
 
     for(let w = 0; w < levels[gGame.currentLevel].walls.length; ++w) {
         let wall = levels[gGame.currentLevel].walls[w];
-        ctx.drawImage(document.getElementById("wall"), getGridWidth() * wall.x, getGridHeight() * wall.y, getGridWidth(), getGridHeight());
+        ctx.drawImage(document.getElementById('wall'), 0, 0, getGridWidth(), getGridHeight(), getGridWidth() * wall.x, getGridHeight() * wall.y, getGridWidth(), getGridHeight());
     }
 
     game.elapsed += deltaTime;
@@ -355,11 +358,11 @@ function onStartResume() {
         if (gGame.state == 'running') {
             gGame.state = 'paused';
             button.innerText = 'Resume';
-            audio.pause();
+            //audio.pause();
         } else {
             gGame.state = 'running';
             button.innerText = 'Pause';        
-            audio.play(); 
+            //audio.play(); 
         }
     }
 }
